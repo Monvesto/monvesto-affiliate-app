@@ -587,9 +587,16 @@ class _ProviderCard extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () async {
                   final uri = Uri.parse(provider['url']);
-                  if (await canLaunchUrl(uri)) {
-                    await launchUrl(uri,
-                        mode: LaunchMode.externalApplication);
+                  try {
+                    await launchUrl(
+                      uri,
+                      mode: LaunchMode.externalApplication,
+                    );
+                  } catch (e) {
+                    await launchUrl(
+                      uri,
+                      mode: LaunchMode.platformDefault,
+                    );
                   }
                 },
                 style: ElevatedButton.styleFrom(
