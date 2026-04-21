@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../widgets/search_bar_widget.dart';
 
 class CompareScreen extends StatefulWidget {
   const CompareScreen({super.key});
@@ -8,6 +9,8 @@ class CompareScreen extends StatefulWidget {
   @override
   State<CompareScreen> createState() => _CompareScreenState();
 }
+
+String _searchQuery = '';
 
 class _CompareScreenState extends State<CompareScreen> {
   String _selectedCategory = 'P2P Kredite';
@@ -125,7 +128,15 @@ class _CompareScreenState extends State<CompareScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final providers = _compareData[_selectedCategory] ?? [];
+    List<Map<String, dynamic>> providers = _compareData[_selectedCategory] ?? [];
+    if (_searchQuery.isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
+      providers = providers.where((p) =>
+      p['name'].toString().toLowerCase().contains(query) ||
+          p['rendite'].toString().toLowerCase().contains(query) ||
+          p['sicherheit'].toString().toLowerCase().contains(query)
+      ).toList();
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A0E1A),
@@ -173,6 +184,15 @@ class _CompareScreenState extends State<CompareScreen> {
                   );
                 }).toList(),
               ),
+            ),
+          ),
+
+          // Suchfeld
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: SearchBarWidget(
+              hint: 'Anbieter suchen...',
+              onChanged: (val) => setState(() => _searchQuery = val),
             ),
           ),
 

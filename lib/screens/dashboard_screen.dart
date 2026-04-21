@@ -8,6 +8,7 @@ import 'settings_screen.dart';
 import 'provider_detail_screen.dart';
 import '../services/firestore_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../widgets/search_bar_widget.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -290,6 +291,13 @@ class _HomeContentState extends State<_HomeContent> {
                   ),
                 ],
               ),
+            ),
+            const SizedBox(height: 24),
+
+            const SizedBox(height: 16),
+            SearchBarWidget(
+              hint: 'Anbieter suchen...',
+              onChanged: (val) => setState(() => _searchQuery = val),
             ),
             const SizedBox(height: 24),
 
