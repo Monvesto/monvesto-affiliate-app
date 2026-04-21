@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/biometric_service.dart';
+import '../services/firestore_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -12,12 +13,25 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final _nameController = TextEditingController();
+  final _firestoreService = FirestoreService();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   bool _notificationsEnabled = true;
   bool _biometricEnabled = false;
   String _selectedTheme = 'Dark';
 
   final List<String> _themes = ['Dark', 'Light', 'System'];
+
+  String get _initials {
+    final first = _firstNameController.text.isNotEmpty
+        ? _firstNameController.text[0].toUpperCase()
+        : '';
+    final last = _lastNameController.text.isNotEmpty
+        ? _lastNameController.text[0].toUpperCase()
+        : '';
+    if (first.isEmpty && last.isEmpty) return '?';
+    return '$first$last';
+  }
 
   @override
   void initState() {
@@ -26,23 +40,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
     final biometricService = BiometricService();
     final biometricEnabled = await biometricService.isEnabled();
+
+    try {
+      final profile = await _firestoreService.getUserProfile();
+      if (profile != null) {
+        setState(() {
+          _firstNameController.text = profile['firstName'] ?? '';
+          _lastNameController.text = profile['lastName'] ?? '';
+          _notificationsEnabled = profile['notifications'] ?? true;
+          _selectedTheme = profile['theme'] ?? 'Dark';
+          _biometricEnabled = biometricEnabled;
+        });
+        return;
+      }
+    } catch (e) {
+      print('Fehler: $e');
+    }
+
+    // Fallback auf lokale Daten
+    final prefs = await SharedPreferences.getInstance();
     setState(() {
+      _firstNameController.text = prefs.getString('firstName') ?? '';
+      _lastNameController.text = prefs.getString('lastName') ?? '';
       _notificationsEnabled = prefs.getBool('notifications') ?? true;
       _selectedTheme = prefs.getString('theme') ?? 'Dark';
-      _nameController.text = prefs.getString('displayName') ??
-          FirebaseAuth.instance.currentUser?.email?.split('@')[0] ?? '';
       _biometricEnabled = biometricEnabled;
     });
   }
 
   Future<void> _saveSettings() async {
+    try {
+      await _firestoreService.saveUserProfile(
+        firstName: _firstNameController.text,
+        lastName: _lastNameController.text,
+        notifications: _notificationsEnabled,
+        theme: _selectedTheme,
+      );
+    } catch (e) {
+      print('Fehler Firestore: $e');
+    }
+
+    // Auch lokal speichern als Backup
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('firstName', _firstNameController.text);
+    await prefs.setString('lastName', _lastNameController.text);
     await prefs.setBool('notifications', _notificationsEnabled);
     await prefs.setString('theme', _selectedTheme);
-    await prefs.setString('displayName', _nameController.text);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -109,24 +154,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Profil Header
+            // Avatar
             Center(
               child: Column(
                 children: [
                   CircleAvatar(
-                    radius: 40,
+                    radius: 45,
                     backgroundColor: const Color(0xFF00D4AA),
                     child: Text(
-                      _nameController.text.isNotEmpty
-                          ? _nameController.text[0].toUpperCase()
-                          : '?',
+                      _initials,
                       style: GoogleFonts.inter(
-                          fontSize: 32,
+                          fontSize: 28,
                           color: Colors.white,
                           fontWeight: FontWeight.bold),
                     ),
                   ),
                   const SizedBox(height: 12),
+                  Text(
+                    '${_firstNameController.text} ${_lastNameController.text}'.trim().isEmpty
+                        ? 'Kein Name'
+                        : '${_firstNameController.text} ${_lastNameController.text}'.trim(),
+                    style: GoogleFonts.inter(
+                        fontSize: 18,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
                   Text(
                     user?.email ?? '',
                     style: GoogleFonts.inter(
@@ -144,9 +197,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 children: [
                   _buildTextField(
-                    controller: _nameController,
-                    label: 'Anzeigename',
+                    controller: _firstNameController,
+                    label: 'Vorname',
                     icon: Icons.person_outline,
+                    onChanged: (_) => setState(() {}),
+                  ),
+                  const Divider(color: Colors.white12),
+                  _buildTextField(
+                    controller: _lastNameController,
+                    label: 'Nachname',
+                    icon: Icons.person_outline,
+                    onChanged: (_) => setState(() {}),
                   ),
                   const Divider(color: Colors.white12),
                   _InfoRow(
@@ -195,8 +256,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         return DropdownMenuItem(
                             value: t,
                             child: Text(t,
-                                style:
-                                GoogleFonts.inter(color: Colors.white)));
+                                style: GoogleFonts.inter(
+                                    color: Colors.white)));
                       }).toList(),
                       onChanged: (val) =>
                           setState(() => _selectedTheme = val!),
@@ -308,6 +369,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required TextEditingController controller,
     required String label,
     required IconData icon,
+    Function(String)? onChanged,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -318,6 +380,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Expanded(
             child: TextField(
               controller: controller,
+              onChanged: onChanged,
               style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
               decoration: InputDecoration(
                 labelText: label,
@@ -388,9 +451,12 @@ class _InfoRow extends StatelessWidget {
                   GoogleFonts.inter(color: Colors.white, fontSize: 14)),
             ],
           ),
-          Text(value,
-              style:
-              GoogleFonts.inter(color: Colors.white54, fontSize: 14)),
+          Flexible(
+            child: Text(value,
+                overflow: TextOverflow.ellipsis,
+                style:
+                GoogleFonts.inter(color: Colors.white54, fontSize: 14)),
+          ),
         ],
       ),
     );

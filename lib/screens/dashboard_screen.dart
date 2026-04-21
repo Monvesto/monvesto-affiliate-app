@@ -6,6 +6,8 @@ import 'compare_screen.dart';
 import 'favorites_screen.dart';
 import 'settings_screen.dart';
 import 'provider_detail_screen.dart';
+import '../services/firestore_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -61,7 +63,33 @@ class _HomeContent extends StatefulWidget {
 class _HomeContentState extends State<_HomeContent> {
   String _selectedCategory = 'Alle';
   List<String> _favorites = [];
+  String _searchQuery = '';
+  final _searchController = TextEditingController();
 
+  Color _hexToColor(String hex) {
+    try {
+      return Color(int.parse('FF$hex', radix: 16));
+    } catch (e) {
+      return const Color(0xFF00D4AA);
+    }
+  }
+
+  IconData _categoryToIcon(String category) {
+    switch (category) {
+      case 'P2P Kredite':
+        return Icons.people_outline;
+      case 'Broker':
+        return Icons.show_chart;
+      case 'Bankkonten':
+        return Icons.account_balance;
+      case 'Krypto':
+        return Icons.currency_bitcoin;
+      default:
+        return Icons.attach_money;
+    }
+  }
+
+  final _firestoreService = FirestoreService();
   final List<Map<String, dynamic>> _categories = [
     {
       'name': 'P2P Kredite',
@@ -86,18 +114,6 @@ class _HomeContentState extends State<_HomeContent> {
   ];
 
   final List<Map<String, dynamic>> _providers = [
-    {
-      'name': 'Mintos',
-      'category': 'P2P Kredite',
-      'description': 'Europas größte P2P Plattform',
-      'return': '8-12%',
-      'rating': 4.5,
-      'url': 'https://www.mintos.com',
-      'color': const Color(0xFF00D4AA),
-      'icon': Icons.people_outline,
-      'pros': ['Große Auswahl', 'Sekundärmarkt', 'Auto-Invest'],
-      'cons': ['Kreditrisiko', 'Währungsrisiko'],
-    },
     {
       'name': 'Trade Republic',
       'category': 'Broker',
@@ -217,9 +233,15 @@ class _HomeContentState extends State<_HomeContent> {
                             color: Colors.white)),
                   ],
                 ),
-                const CircleAvatar(
-                  backgroundColor: Color(0xFF00D4AA),
-                  child: Icon(Icons.person, color: Colors.white),
+                GestureDetector(
+                  onTap: () {
+                    // Zu Einstellungen wechseln
+                    context.findAncestorStateOfType<_DashboardScreenState>()
+                        ?._currentIndex = 3;
+                    context.findAncestorStateOfType<_DashboardScreenState>()
+                        ?.setState(() {});
+                  },
+                  child: _ProfileAvatar(),
                 ),
               ],
             ),
@@ -307,12 +329,74 @@ class _HomeContentState extends State<_HomeContent> {
                     fontWeight: FontWeight.bold,
                     color: Colors.white)),
             const SizedBox(height: 16),
-            ..._filteredProviders.map((provider) => _ProviderCard(
-              provider: provider,
-              isFavorite: _favorites.contains(provider['name']),
-              onFavoriteToggle: () =>
-                  _toggleFavorite(provider['name']),
-            )),
+            StreamBuilder<QuerySnapshot>(
+              stream: _firestoreService.getProviders(),
+              builder: (context, snapshot) {
+                // Falls Firestore leer → lokale Daten verwenden
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return Column(
+                    children: _filteredProviders.map((provider) => _ProviderCard(
+                      provider: provider,
+                      isFavorite: _favorites.contains(provider['name']),
+                      onFavoriteToggle: () => _toggleFavorite(provider['name']),
+                    )).toList(),
+                  );
+                }
+
+                // Firestore Daten
+                final docs = snapshot.data!.docs;
+                final firestoreProviders = docs.map((doc) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  return {
+                    'name': data['name'] ?? '',
+                    'category': data['category'] ?? '',
+                    'description': data['description'] ?? '',
+                    'return': data['return'] ?? '',
+                    'rating': (data['rating'] ?? 0).toDouble(),
+                    'url': data['url'] ?? '',
+                    'colorHex': data['colorHex'] ?? '00D4AA',
+                    'pros': data['pros'] is List
+                        ? List<String>.from(data['pros'])
+                        : [],
+                    'cons': data['cons'] is List
+                        ? List<String>.from(data['cons'])
+                        : [],
+                    'tags': data['tags'] is List
+                        ? List<String>.from(data['tags'])
+                        : [],
+                    'color': _hexToColor(data['colorHex'] ?? '00D4AA'),
+                    'icon': _categoryToIcon(data['category'] ?? ''),
+                  };
+                }).toList();
+
+                // Filter anwenden
+                var filtered = firestoreProviders;
+                if (_selectedCategory != 'Alle') {
+                  filtered = filtered
+                      .where((p) => p['category'] == _selectedCategory)
+                      .toList();
+                }
+                if (_searchQuery.isNotEmpty) {
+                  final query = _searchQuery.toLowerCase();
+                  filtered = filtered.where((p) {
+                    if (p['name'].toString().toLowerCase().contains(query)) return true;
+                    if (p['category'].toString().toLowerCase().contains(query)) return true;
+                    if (p['description'].toString().toLowerCase().contains(query)) return true;
+                    final tags = p['tags'] as List<String>;
+                    if (tags.any((tag) => tag.toLowerCase().contains(query))) return true;
+                    return false;
+                  }).toList();
+                }
+
+                return Column(
+                  children: filtered.map((provider) => _ProviderCard(
+                    provider: provider,
+                    isFavorite: _favorites.contains(provider['name']),
+                    onFavoriteToggle: () => _toggleFavorite(provider['name']),
+                  )).toList(),
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -491,6 +575,46 @@ class _ProviderCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+class _ProfileAvatar extends StatefulWidget {
+  const _ProfileAvatar();
+
+  @override
+  State<_ProfileAvatar> createState() => _ProfileAvatarState();
+}
+
+class _ProfileAvatarState extends State<_ProfileAvatar> {
+  String _initials = '?';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitials();
+  }
+
+  Future<void> _loadInitials() async {
+    final prefs = await SharedPreferences.getInstance();
+    final first = prefs.getString('firstName') ?? '';
+    final last = prefs.getString('lastName') ?? '';
+    setState(() {
+      final f = first.isNotEmpty ? first[0].toUpperCase() : '';
+      final l = last.isNotEmpty ? last[0].toUpperCase() : '';
+      _initials = (f + l).isEmpty ? '?' : f + l;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CircleAvatar(
+      backgroundColor: const Color(0xFF00D4AA),
+      child: Text(
+        _initials,
+        style: GoogleFonts.inter(
+            color: Colors.white,
+            fontWeight: FontWeight.bold),
       ),
     );
   }
