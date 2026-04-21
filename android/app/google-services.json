@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "349265203350",
+    "project_id": "monvesto-affiliate-app",
+    "storage_bucket": "monvesto-affiliate-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:349265203350:android:d7f6794c1a6389bd3af2b7",
+        "android_client_info": {
+          "package_name": "com.monvesto.affiliateapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBEC8vq2PEWw5Ay8wCpl7wN9Bz5tfhu-tE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:349265203350:android:d1f665fc1f3ba8943af2b7",
+        "android_client_info": {
+          "package_name": "com.monvesto.monvesto_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBEC8vq2PEWw5Ay8wCpl7wN9Bz5tfhu-tE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
