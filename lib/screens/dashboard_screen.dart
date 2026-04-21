@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'compare_screen.dart';
 import 'favorites_screen.dart';
 import 'settings_screen.dart';
@@ -59,6 +59,7 @@ class _HomeContent extends StatefulWidget {
 
 class _HomeContentState extends State<_HomeContent> {
   String _selectedCategory = 'Alle';
+  List<String> _favorites = [];
 
   final List<Map<String, dynamic>> _categories = [
     {
@@ -157,6 +158,31 @@ class _HomeContentState extends State<_HomeContent> {
       'cons': ['Prime Abo nötig'],
     },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFavorites();
+  }
+
+  Future<void> _loadFavorites() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _favorites = prefs.getStringList('favorites') ?? [];
+    });
+  }
+
+  Future<void> _toggleFavorite(String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      if (_favorites.contains(name)) {
+        _favorites.remove(name);
+      } else {
+        _favorites.add(name);
+      }
+    });
+    await prefs.setStringList('favorites', _favorites);
+  }
 
   List<Map<String, dynamic>> get _filteredProviders {
     if (_selectedCategory == 'Alle') return _providers;
@@ -280,8 +306,12 @@ class _HomeContentState extends State<_HomeContent> {
                     fontWeight: FontWeight.bold,
                     color: Colors.white)),
             const SizedBox(height: 16),
-            ..._filteredProviders
-                .map((provider) => _ProviderCard(provider: provider)),
+            ..._filteredProviders.map((provider) => _ProviderCard(
+              provider: provider,
+              isFavorite: _favorites.contains(provider['name']),
+              onFavoriteToggle: () =>
+                  _toggleFavorite(provider['name']),
+            )),
           ],
         ),
       ),
@@ -328,8 +358,14 @@ class _CategoryChip extends StatelessWidget {
 
 class _ProviderCard extends StatelessWidget {
   final Map<String, dynamic> provider;
+  final bool isFavorite;
+  final VoidCallback onFavoriteToggle;
 
-  const _ProviderCard({required this.provider});
+  const _ProviderCard({
+    required this.provider,
+    required this.isFavorite,
+    required this.onFavoriteToggle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -382,6 +418,13 @@ class _ProviderCard extends StatelessWidget {
                       style: GoogleFonts.inter(
                           fontSize: 10, color: Colors.white38)),
                 ],
+              ),
+              IconButton(
+                onPressed: onFavoriteToggle,
+                icon: Icon(
+                  isFavorite ? Icons.favorite : Icons.favorite_outline,
+                  color: isFavorite ? Colors.red : Colors.white38,
+                ),
               ),
             ],
           ),

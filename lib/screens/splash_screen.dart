@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../services/biometric_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -10,6 +11,8 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  final _biometricService = BiometricService();
+
   @override
   void initState() {
     super.initState();
@@ -22,7 +25,21 @@ class _SplashScreenState extends State<SplashScreen> {
 
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      Navigator.pushReplacementNamed(context, '/dashboard');
+      final biometricEnabled = await _biometricService.isEnabled();
+      final biometricAvailable = await _biometricService.isAvailable();
+
+      if (biometricEnabled && biometricAvailable) {
+        final authenticated = await _biometricService.authenticate();
+        if (!mounted) return;
+        if (authenticated) {
+          Navigator.pushReplacementNamed(context, '/dashboard');
+        } else {
+          await FirebaseAuth.instance.signOut();
+          Navigator.pushReplacementNamed(context, '/login');
+        }
+      } else {
+        Navigator.pushReplacementNamed(context, '/dashboard');
+      }
     } else {
       Navigator.pushReplacementNamed(context, '/login');
     }
