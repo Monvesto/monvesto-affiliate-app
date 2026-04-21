@@ -299,7 +299,12 @@ class _HomeContentState extends State<_HomeContent> {
             const SizedBox(height: 16),
             SearchBarWidget(
               hint: 'Anbieter suchen...',
-              onChanged: (val) => setState(() => _searchQuery = val),
+              onChanged: (val) => setState(() {
+                _searchQuery = val;
+                if (val.isNotEmpty) {
+                  _selectedCategory = 'Alle';
+                }
+              }),
             ),
             const SizedBox(height: 24),
 
