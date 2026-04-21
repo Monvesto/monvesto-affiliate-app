@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'compare_screen.dart';
 import 'favorites_screen.dart';
 import 'settings_screen.dart';
+import 'provider_detail_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -369,119 +370,127 @@ class _ProviderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF131829),
-        borderRadius: BorderRadius.circular(16),
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ProviderDetailScreen(provider: provider),
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: (provider['color'] as Color).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF131829),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: (provider['color'] as Color).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(provider['icon'] as IconData,
+                      color: provider['color'] as Color, size: 24),
                 ),
-                child: Icon(provider['icon'] as IconData,
-                    color: provider['color'] as Color, size: 24),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(provider['name'],
+                          style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white)),
+                      Text(provider['category'],
+                          style: GoogleFonts.inter(
+                              fontSize: 12, color: Colors.white54)),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(provider['name'],
+                    Text(provider['return'],
                         style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white)),
-                    Text(provider['category'],
+                            color: const Color(0xFF00D4AA))),
+                    Text('Rendite',
                         style: GoogleFonts.inter(
-                            fontSize: 12, color: Colors.white54)),
+                            fontSize: 10, color: Colors.white38)),
                   ],
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(provider['return'],
-                      style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF00D4AA))),
-                  Text('Rendite',
-                      style: GoogleFonts.inter(
-                          fontSize: 10, color: Colors.white38)),
-                ],
-              ),
-              IconButton(
-                onPressed: onFavoriteToggle,
-                icon: Icon(
-                  isFavorite ? Icons.favorite : Icons.favorite_outline,
-                  color: isFavorite ? Colors.red : Colors.white38,
+                IconButton(
+                  onPressed: onFavoriteToggle,
+                  icon: Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_outline,
+                    color: isFavorite ? Colors.red : Colors.white38,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(provider['description'],
-              style: GoogleFonts.inter(
-                  fontSize: 13, color: Colors.white70)),
-          const SizedBox(height: 12),
-
-          // Pros
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            children: (provider['pros'] as List<String>)
-                .map((pro) => Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFF00D4AA)
-                    .withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text('✓ $pro',
-                  style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: const Color(0xFF00D4AA))),
-            ))
-                .toList(),
-          ),
-          const SizedBox(height: 12),
-
-          // Button
-          SizedBox(
-            width: double.infinity,
-            height: 44,
-            child: ElevatedButton(
-              onPressed: () async {
-                final uri = Uri.parse(provider['url']);
-                if (await canLaunchUrl(uri)) {
-                  await launchUrl(uri,
-                      mode: LaunchMode.externalApplication);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: provider['color'] as Color,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: Text('Jetzt anmelden →',
-                  style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white)),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            Text(provider['description'],
+                style: GoogleFonts.inter(
+                    fontSize: 13, color: Colors.white70)),
+            const SizedBox(height: 12),
+
+            // Pros
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: (provider['pros'] as List<String>)
+                  .map((pro) => Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF00D4AA)
+                      .withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text('✓ $pro',
+                    style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: const Color(0xFF00D4AA))),
+              ))
+                  .toList(),
+            ),
+            const SizedBox(height: 12),
+
+            // Button
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: ElevatedButton(
+                onPressed: () async {
+                  final uri = Uri.parse(provider['url']);
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri,
+                        mode: LaunchMode.externalApplication);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: provider['color'] as Color,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: Text('Jetzt anmelden →',
+                    style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white)),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
