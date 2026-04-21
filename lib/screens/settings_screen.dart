@@ -18,6 +18,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _firestoreService = FirestoreService();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
+  bool _newsletterEnabled = false;
   bool _notificationsEnabled = true;
   bool _biometricEnabled = false;
   String _selectedTheme = 'Dark';
@@ -69,6 +70,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _notificationsEnabled = prefs.getBool('notifications') ?? true;
       _selectedTheme = prefs.getString('theme') ?? 'Dark';
       _biometricEnabled = biometricEnabled;
+      _newsletterEnabled = prefs.getBool('newsletter') ?? false;
     });
   }
 
@@ -90,6 +92,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await prefs.setString('lastName', _lastNameController.text);
     await prefs.setBool('notifications', _notificationsEnabled);
     await prefs.setString('theme', _selectedTheme);
+    await prefs.setBool('newsletter', _newsletterEnabled);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -268,6 +271,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         }
                       }
                     },
+                  ),
+                  const Divider(color: Colors.white12),
+                  _SwitchRow(
+                    icon: Icons.email_outlined,
+                    label: 'Newsletter abonnieren',
+                    value: _newsletterEnabled,
+                    onChanged: (val) => setState(() => _newsletterEnabled = val),
                   ),
                 ],
               ),
