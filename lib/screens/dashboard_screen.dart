@@ -9,6 +9,8 @@ import 'provider_detail_screen.dart';
 import '../services/firestore_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/search_bar_widget.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -604,14 +606,37 @@ class _ProfileAvatarState extends State<_ProfileAvatar> {
   }
 
   Future<void> _loadInitials() async {
+    // Erst aus SharedPreferences laden
     final prefs = await SharedPreferences.getInstance();
-    final first = prefs.getString('firstName') ?? '';
-    final last = prefs.getString('lastName') ?? '';
-    setState(() {
-      final f = first.isNotEmpty ? first[0].toUpperCase() : '';
-      final l = last.isNotEmpty ? last[0].toUpperCase() : '';
-      _initials = (f + l).isEmpty ? '?' : f + l;
-    });
+    var first = prefs.getString('firstName') ?? '';
+    var last = prefs.getString('lastName') ?? '';
+
+    // Falls leer → aus Firestore laden
+    if (first.isEmpty && last.isEmpty) {
+      try {
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(FirebaseAuth.instance.currentUser?.uid)
+            .get();
+        if (doc.exists) {
+          first = doc.data()?['firstName'] ?? '';
+          last = doc.data()?['lastName'] ?? '';
+          // Lokal speichern für nächstes Mal
+          await prefs.setString('firstName', first);
+          await prefs.setString('lastName', last);
+        }
+      } catch (e) {
+        print('Fehler: $e');
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        final f = first.isNotEmpty ? first[0].toUpperCase() : '';
+        final l = last.isNotEmpty ? last[0].toUpperCase() : '';
+        _initials = (f + l).isEmpty ? '?' : f + l;
+      });
+    }
   }
 
   @override
