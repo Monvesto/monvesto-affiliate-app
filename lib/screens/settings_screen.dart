@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/biometric_service.dart';
 import '../services/firestore_service.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -228,44 +230,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Einstellungen Section
-            _SectionTitle(title: 'Einstellungen'),
-            const SizedBox(height: 12),
-            _SettingsCard(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.palette_outlined,
-                            color: Color(0xFF00D4AA), size: 20),
-                        const SizedBox(width: 12),
-                        Text('Design',
-                            style: GoogleFonts.inter(
-                                color: Colors.white, fontSize: 14)),
-                      ],
-                    ),
-                    DropdownButton<String>(
-                      value: _selectedTheme,
-                      dropdownColor: const Color(0xFF1A1F35),
-                      style: GoogleFonts.inter(color: Colors.white),
-                      underline: const SizedBox(),
-                      items: _themes.map((t) {
-                        return DropdownMenuItem(
-                            value: t,
-                            child: Text(t,
-                                style: GoogleFonts.inter(
-                                    color: Colors.white)));
-                      }).toList(),
-                      onChanged: (val) =>
-                          setState(() => _selectedTheme = val!),
-                    ),
-                  ],
-                ),
-              ),
-            ),
             const SizedBox(height: 24),
 
             // Benachrichtigungen & Sicherheit

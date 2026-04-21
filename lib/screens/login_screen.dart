@@ -264,6 +264,20 @@ class _LoginScreenState extends State<LoginScreen> {
                           color: const Color(0xFF00D4AA))),
                 ),
               ),
+              const SizedBox(height: 16),
+              Center(
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/guest');
+                  },
+                  child: Text(
+                    'Ohne Anmeldung fortfahren →',
+                    style: GoogleFonts.inter(
+                        color: Colors.white38,
+                        fontSize: 14),
+                  ),
+                ),
+              ),
             ],
           ),
         ),

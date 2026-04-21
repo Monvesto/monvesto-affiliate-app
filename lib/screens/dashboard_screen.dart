@@ -9,11 +9,11 @@ import 'provider_detail_screen.dart';
 import '../services/firestore_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/search_bar_widget.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  final bool isGuest;
+  const DashboardScreen({super.key, this.isGuest = false});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -21,13 +21,49 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
+  late final List<Widget> _screens;
 
-  final List<Widget> _screens = [
-    const _HomeContent(),
-    const CompareScreen(),
-    const FavoritesScreen(),
-    const SettingsScreen(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      _HomeContent(isGuest: widget.isGuest),
+      const CompareScreen(),
+      const FavoritesScreen(),
+      const SettingsScreen(),
+    ];
+  }
+
+  void _showGuestDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF131829),
+        title: Text('Funktion gesperrt',
+            style: GoogleFonts.inter(color: Colors.white)),
+        content: Text(
+            'Diese Funktion ist nur für registrierte Nutzer verfügbar!',
+            style: GoogleFonts.inter(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Abbrechen',
+                style: GoogleFonts.inter(color: Colors.white54)),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushReplacementNamed(context, '/login');
+            },
+            child: Text('Jetzt registrieren',
+                style: GoogleFonts.inter(
+                    color: const Color(0xFF00D4AA),
+                    fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +72,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: _screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: (index) {
+          if (widget.isGuest && (index == 1 || index == 2)) {
+            _showGuestDialog(context);
+            return;
+          }
+          setState(() => _currentIndex = index);
+        },
         backgroundColor: const Color(0xFF131829),
         selectedItemColor: const Color(0xFF00D4AA),
         unselectedItemColor: Colors.white38,
@@ -57,7 +99,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 }
 
 class _HomeContent extends StatefulWidget {
-  const _HomeContent();
+  final bool isGuest;
+  const _HomeContent({this.isGuest = false});
 
   @override
   State<_HomeContent> createState() => _HomeContentState();
@@ -67,32 +110,8 @@ class _HomeContentState extends State<_HomeContent> {
   String _selectedCategory = 'Alle';
   List<String> _favorites = [];
   String _searchQuery = '';
-  final _searchController = TextEditingController();
-
-  Color _hexToColor(String hex) {
-    try {
-      return Color(int.parse('FF$hex', radix: 16));
-    } catch (e) {
-      return const Color(0xFF00D4AA);
-    }
-  }
-
-  IconData _categoryToIcon(String category) {
-    switch (category) {
-      case 'P2P Kredite':
-        return Icons.people_outline;
-      case 'Broker':
-        return Icons.show_chart;
-      case 'Bankkonten':
-        return Icons.account_balance;
-      case 'Krypto':
-        return Icons.currency_bitcoin;
-      default:
-        return Icons.attach_money;
-    }
-  }
-
   final _firestoreService = FirestoreService();
+
   final List<Map<String, dynamic>> _categories = [
     {
       'name': 'P2P Kredite',
@@ -113,69 +132,6 @@ class _HomeContentState extends State<_HomeContent> {
       'name': 'Krypto',
       'icon': Icons.currency_bitcoin,
       'color': const Color(0xFFFFD93D),
-    },
-  ];
-
-  final List<Map<String, dynamic>> _providers = [
-    {
-      'name': 'Trade Republic',
-      'category': 'Broker',
-      'description': 'Einfaches und günstiges Investieren',
-      'return': 'Variabel',
-      'rating': 4.7,
-      'url': 'https://www.traderepublic.com',
-      'color': const Color(0xFF0088CC),
-      'icon': Icons.show_chart,
-      'pros': ['1€ pro Trade', '4% Zinsen', 'ETF Sparpläne'],
-      'cons': ['Kein Margin Trading'],
-    },
-    {
-      'name': 'ING',
-      'category': 'Bankkonten',
-      'description': 'Kostenloses Girokonto mit Extras',
-      'return': '2-3%',
-      'rating': 4.3,
-      'url': 'https://www.ing.de',
-      'color': const Color(0xFFFF6B6B),
-      'icon': Icons.account_balance,
-      'pros': ['Kostenlos', 'Tagesgeld', 'Kreditkarte'],
-      'cons': ['Kein Filialnetz'],
-    },
-    {
-      'name': 'Coinbase',
-      'category': 'Krypto',
-      'description': 'Die sicherste Krypto Exchange',
-      'return': 'Variabel',
-      'rating': 4.4,
-      'url': 'https://www.coinbase.com',
-      'color': const Color(0xFFFFD93D),
-      'icon': Icons.currency_bitcoin,
-      'pros': ['Sicher', 'Einfach', 'Staking'],
-      'cons': ['Hohe Gebühren'],
-    },
-    {
-      'name': 'Bondora',
-      'category': 'P2P Kredite',
-      'description': 'Go & Grow – einfaches P2P Investment',
-      'return': '6.75%',
-      'rating': 4.2,
-      'url': 'https://www.bondora.com',
-      'color': const Color(0xFF00D4AA),
-      'icon': Icons.people_outline,
-      'pros': ['Einfach', 'Liquide', 'Automatisch'],
-      'cons': ['Begrenzte Rendite'],
-    },
-    {
-      'name': 'Scalable Capital',
-      'category': 'Broker',
-      'description': 'Robo-Advisor & Broker in einem',
-      'return': 'Variabel',
-      'rating': 4.5,
-      'url': 'https://www.scalable.capital',
-      'color': const Color(0xFF0088CC),
-      'icon': Icons.show_chart,
-      'pros': ['Robo-Advisor', 'ETF Sparpläne', '4% Zinsen'],
-      'cons': ['Prime Abo nötig'],
     },
   ];
 
@@ -204,11 +160,27 @@ class _HomeContentState extends State<_HomeContent> {
     await prefs.setStringList('favorites', _favorites);
   }
 
-  List<Map<String, dynamic>> get _filteredProviders {
-    if (_selectedCategory == 'Alle') return _providers;
-    return _providers
-        .where((p) => p['category'] == _selectedCategory)
-        .toList();
+  Color _hexToColor(String hex) {
+    try {
+      return Color(int.parse('FF$hex', radix: 16));
+    } catch (e) {
+      return const Color(0xFF00D4AA);
+    }
+  }
+
+  IconData _categoryToIcon(String category) {
+    switch (category) {
+      case 'P2P Kredite':
+        return Icons.people_outline;
+      case 'Broker':
+        return Icons.show_chart;
+      case 'Bankkonten':
+        return Icons.account_balance;
+      case 'Krypto':
+        return Icons.currency_bitcoin;
+      default:
+        return Icons.attach_money;
+    }
   }
 
   @override
@@ -238,17 +210,18 @@ class _HomeContentState extends State<_HomeContent> {
                 ),
                 GestureDetector(
                   onTap: () {
-                    // Zu Einstellungen wechseln
-                    context.findAncestorStateOfType<_DashboardScreenState>()
+                    context
+                        .findAncestorStateOfType<_DashboardScreenState>()
                         ?._currentIndex = 3;
-                    context.findAncestorStateOfType<_DashboardScreenState>()
+                    context
+                        .findAncestorStateOfType<_DashboardScreenState>()
                         ?.setState(() {});
                   },
-                  child: _ProfileAvatar(),
+                  child: const _ProfileAvatar(),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
             // Hero Card
             Container(
@@ -276,27 +249,50 @@ class _HomeContentState extends State<_HomeContent> {
                     style: GoogleFonts.inter(
                         fontSize: 14, color: Colors.white70),
                   ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '${_providers.length} Anbieter verfügbar',
-                      style: GoogleFonts.inter(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+
+            // Gast Banner
+            if (widget.isGuest) ...[
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF00D4AA).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                      color: const Color(0xFF00D4AA).withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.lock_outline,
+                        color: Color(0xFF00D4AA), size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Registriere dich kostenlos für alle Anbieter und Features!',
+                        style: GoogleFonts.inter(
+                            color: Colors.white70, fontSize: 13),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () =>
+                          Navigator.pushReplacementNamed(context, '/login'),
+                      child: Text('Jetzt →',
+                          style: GoogleFonts.inter(
+                              color: const Color(0xFF00D4AA),
+                              fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
 
             const SizedBox(height: 16),
+
+            // Suchfeld
             SearchBarWidget(
               hint: 'Anbieter suchen...',
               onChanged: (val) => setState(() {
@@ -345,31 +341,29 @@ class _HomeContentState extends State<_HomeContent> {
                     color: Colors.white)),
             const SizedBox(height: 16),
             StreamBuilder<QuerySnapshot>(
-              stream: _firestoreService.getProviders(),
+              stream: widget.isGuest
+                  ? _firestoreService.getPublicProviders()
+                  : _firestoreService.getProviders(),
               builder: (context, snapshot) {
-                // Falls Firestore leer → lokale Daten verwenden
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return Column(
-                    children: _filteredProviders.map((provider) => _ProviderCard(
-                      provider: provider,
-                      isFavorite: _favorites.contains(provider['name']),
-                      onFavoriteToggle: () => _toggleFavorite(provider['name']),
-                    )).toList(),
+                  return const Center(
+                    child: CircularProgressIndicator(
+                        color: Color(0xFF00D4AA)),
                   );
                 }
 
-                // Firestore Daten
                 final docs = snapshot.data!.docs;
-                final firestoreProviders = docs.map((doc) {
+                var filtered = docs.map((doc) {
                   final data = doc.data() as Map<String, dynamic>;
                   return {
                     'name': data['name'] ?? '',
                     'category': data['category'] ?? '',
                     'description': data['description'] ?? '',
                     'return': data['return'] ?? '',
-                    'rating': (data['rating'] ?? 0).toDouble(),
+                    'rating': double.tryParse(
+                        data['rating'].toString()) ??
+                        0.0,
                     'url': data['url'] ?? '',
-                    'colorHex': data['colorHex'] ?? '00D4AA',
                     'pros': data['pros'] is List
                         ? List<String>.from(data['pros'])
                         : [],
@@ -384,31 +378,51 @@ class _HomeContentState extends State<_HomeContent> {
                   };
                 }).toList();
 
-                // Filter anwenden
-                var filtered = firestoreProviders;
+                // Kategorie Filter
                 if (_selectedCategory != 'Alle') {
                   filtered = filtered
                       .where((p) => p['category'] == _selectedCategory)
                       .toList();
                 }
+
+                // Suche Filter
                 if (_searchQuery.isNotEmpty) {
                   final query = _searchQuery.toLowerCase();
                   filtered = filtered.where((p) {
-                    if (p['name'].toString().toLowerCase().contains(query)) return true;
-                    if (p['category'].toString().toLowerCase().contains(query)) return true;
-                    if (p['description'].toString().toLowerCase().contains(query)) return true;
+                    if (p['name']
+                        .toString()
+                        .toLowerCase()
+                        .contains(query)) return true;
+                    if (p['category']
+                        .toString()
+                        .toLowerCase()
+                        .contains(query)) return true;
+                    if (p['description']
+                        .toString()
+                        .toLowerCase()
+                        .contains(query)) return true;
                     final tags = p['tags'] as List<String>;
-                    if (tags.any((tag) => tag.toLowerCase().contains(query))) return true;
+                    if (tags.any((tag) =>
+                        tag.toLowerCase().contains(query))) return true;
                     return false;
                   }).toList();
                 }
 
+                // Gäste sehen nur Top 3
+                if (widget.isGuest) {
+                  filtered = filtered.take(3).toList();
+                }
+
                 return Column(
-                  children: filtered.map((provider) => _ProviderCard(
+                  children: filtered
+                      .map((provider) => _ProviderCard(
                     provider: provider,
-                    isFavorite: _favorites.contains(provider['name']),
-                    onFavoriteToggle: () => _toggleFavorite(provider['name']),
-                  )).toList(),
+                    isFavorite:
+                    _favorites.contains(provider['name']),
+                    onFavoriteToggle: () =>
+                        _toggleFavorite(provider['name']),
+                  ))
+                      .toList(),
                 );
               },
             ),
@@ -491,7 +505,8 @@ class _ProviderCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: (provider['color'] as Color).withValues(alpha: 0.1),
+                    color: (provider['color'] as Color)
+                        .withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(provider['icon'] as IconData,
@@ -529,7 +544,9 @@ class _ProviderCard extends StatelessWidget {
                 IconButton(
                   onPressed: onFavoriteToggle,
                   icon: Icon(
-                    isFavorite ? Icons.favorite : Icons.favorite_outline,
+                    isFavorite
+                        ? Icons.favorite
+                        : Icons.favorite_outline,
                     color: isFavorite ? Colors.red : Colors.white38,
                   ),
                 ),
@@ -594,6 +611,7 @@ class _ProviderCard extends StatelessWidget {
     );
   }
 }
+
 class _ProfileAvatar extends StatefulWidget {
   const _ProfileAvatar();
 
@@ -611,12 +629,10 @@ class _ProfileAvatarState extends State<_ProfileAvatar> {
   }
 
   Future<void> _loadInitials() async {
-    // Erst aus SharedPreferences laden
     final prefs = await SharedPreferences.getInstance();
     var first = prefs.getString('firstName') ?? '';
     var last = prefs.getString('lastName') ?? '';
 
-    // Falls leer → aus Firestore laden
     if (first.isEmpty && last.isEmpty) {
       try {
         final doc = await FirebaseFirestore.instance
@@ -626,7 +642,6 @@ class _ProfileAvatarState extends State<_ProfileAvatar> {
         if (doc.exists) {
           first = doc.data()?['firstName'] ?? '';
           last = doc.data()?['lastName'] ?? '';
-          // Lokal speichern für nächstes Mal
           await prefs.setString('firstName', first);
           await prefs.setString('lastName', last);
         }
@@ -651,8 +666,7 @@ class _ProfileAvatarState extends State<_ProfileAvatar> {
       child: Text(
         _initials,
         style: GoogleFonts.inter(
-            color: Colors.white,
-            fontWeight: FontWeight.bold),
+            color: Colors.white, fontWeight: FontWeight.bold),
       ),
     );
   }

@@ -6,6 +6,25 @@ class FirestoreService {
 
   String get _uid => FirebaseAuth.instance.currentUser!.uid;
 
+  // Alle Anbieter für eingeloggte Nutzer
+  Stream<QuerySnapshot> getProviders() {
+    return _db
+        .collection('providers')
+        .where('active', isEqualTo: true)
+        .orderBy('order')
+        .snapshots();
+  }
+
+  // Nur öffentliche Anbieter für Gäste
+  Stream<QuerySnapshot> getPublicProviders() {
+    return _db
+        .collection('providers')
+        .where('active', isEqualTo: true)
+        .where('public', isEqualTo: true)
+        .orderBy('order')
+        .snapshots();
+  }
+
   // Nutzerdaten speichern
   Future<void> saveUserProfile({
     required String firstName,
@@ -26,12 +45,5 @@ class FirestoreService {
   Future<Map<String, dynamic>?> getUserProfile() async {
     final doc = await _db.collection('users').doc(_uid).get();
     return doc.data();
-  }
-
-  // Anbieter laden
-  Stream<QuerySnapshot> getProviders() {
-    return _db
-        .collection('providers')
-        .snapshots();
   }
 }
