@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/biometric_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -22,6 +23,14 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _checkAuthState() async {
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
+
+    // Onboarding prüfen
+    final prefs = await SharedPreferences.getInstance();
+    final onboardingComplete = prefs.getBool('onboarding_complete') ?? false;
+    if (!onboardingComplete) {
+      Navigator.pushReplacementNamed(context, '/onboarding');
+      return;
+    }
 
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {

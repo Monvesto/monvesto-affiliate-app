@@ -25,6 +25,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   final List<String> _themes = ['Dark', 'Light', 'System'];
 
+  String _selectedCountry = 'DE';
+
+  final List<Map<String, String>> _countries = [
+    {'code': 'DE', 'name': '🇩🇪 Deutschland'},
+    {'code': 'AT', 'name': '🇦🇹 Österreich'},
+    {'code': 'CH', 'name': '🇨🇭 Schweiz'},
+    {'code': 'EU', 'name': '🇪🇺 Europa (alle)'},
+    {'code': 'ALL', 'name': '🌍 Weltweit'},
+  ];
+
   String get _initials {
     final first = _firstNameController.text.isNotEmpty
         ? _firstNameController.text[0].toUpperCase()
@@ -43,9 +53,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _loadSettings() async {
+    // Biometrie Status laden
     final biometricService = BiometricService();
     final biometricEnabled = await biometricService.isEnabled();
 
+    // Lokale Daten laden
+    final prefs = await SharedPreferences.getInstance();
+
+    // Firestore Profil laden
     try {
       final profile = await _firestoreService.getUserProfile();
       if (profile != null) {
@@ -55,6 +70,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _notificationsEnabled = profile['notifications'] ?? true;
           _selectedTheme = profile['theme'] ?? 'Dark';
           _biometricEnabled = biometricEnabled;
+          _newsletterEnabled = prefs.getBool('newsletter') ?? false;
+          _selectedCountry = prefs.getString('country') ?? 'DE';
         });
         return;
       }
@@ -63,7 +80,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
 
     // Fallback auf lokale Daten
-    final prefs = await SharedPreferences.getInstance();
     setState(() {
       _firstNameController.text = prefs.getString('firstName') ?? '';
       _lastNameController.text = prefs.getString('lastName') ?? '';
@@ -71,6 +87,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _selectedTheme = prefs.getString('theme') ?? 'Dark';
       _biometricEnabled = biometricEnabled;
       _newsletterEnabled = prefs.getBool('newsletter') ?? false;
+      _selectedCountry = prefs.getString('country') ?? 'DE';
     });
   }
 
@@ -93,6 +110,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await prefs.setBool('notifications', _notificationsEnabled);
     await prefs.setString('theme', _selectedTheme);
     await prefs.setBool('newsletter', _newsletterEnabled);
+    await prefs.setString('country', _selectedCountry);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -228,6 +246,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ? 'Verifiziert ✓'
                         : 'Nicht verifiziert',
                   ),
+
+                  const Divider(color: Colors.white12),
+                  _InfoRow(
+                    icon: Icons.location_on_outlined,
+                    label: 'Land',
+                    value: _selectedCountry == 'DE' ? '🇩🇪 Deutschland' :
+                    _selectedCountry == 'AT' ? '🇦🇹 Österreich' :
+                    _selectedCountry == 'CH' ? '🇨🇭 Schweiz' :
+                    _selectedCountry == 'EU' ? '🇪🇺 Europa' :
+                    '🌍 Weltweit',
+                  ),
+
                 ],
               ),
             ),

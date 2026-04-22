@@ -7,6 +7,8 @@ import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'services/notification_service.dart';
+import 'screens/onboarding_screen.dart';
+import 'screens/register_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,6 +65,8 @@ class MonvestoAffiliateApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/dashboard': (context) => const DashboardScreen(),
         '/guest': (context) => const DashboardScreen(isGuest: true),
+        '/onboarding': (context) => const OnboardingScreen(),
+        '/register': (context) => const RegisterScreen(),
       },
     );
   }

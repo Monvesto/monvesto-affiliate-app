@@ -110,6 +110,7 @@ class _HomeContentState extends State<_HomeContent> {
   String _selectedCategory = 'Alle';
   List<String> _favorites = [];
   String _searchQuery = '';
+  String _userCountry = 'DE';
   final _firestoreService = FirestoreService();
 
   final List<Map<String, dynamic>> _categories = [
@@ -139,6 +140,14 @@ class _HomeContentState extends State<_HomeContent> {
   void initState() {
     super.initState();
     _loadFavorites();
+    _loadCountry();
+  }
+
+  Future<void> _loadCountry() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userCountry = prefs.getString('country') ?? 'DE';
+    });
   }
 
   Future<void> _loadFavorites() async {
@@ -343,7 +352,7 @@ class _HomeContentState extends State<_HomeContent> {
             StreamBuilder<QuerySnapshot>(
               stream: widget.isGuest
                   ? _firestoreService.getPublicProviders()
-                  : _firestoreService.getProviders(),
+                  : _firestoreService.getProvidersByCountry(_userCountry),
               builder: (context, snapshot) {
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                   return const Center(

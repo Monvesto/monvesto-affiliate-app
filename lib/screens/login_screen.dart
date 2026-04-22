@@ -250,7 +250,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: double.infinity,
                 height: 56,
                 child: OutlinedButton(
-                  onPressed: _isLoading ? null : _register,
+                  onPressed: () => Navigator.pushNamed(context, '/register'),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Color(0xFF00D4AA)),
                     shape: RoundedRectangleBorder(

@@ -25,6 +25,16 @@ class FirestoreService {
         .snapshots();
   }
 
+  // Nach land filtern in Firestore
+  Stream<QuerySnapshot> getProvidersByCountry(String countryCode) {
+    return _db
+        .collection('providers')
+        .where('active', isEqualTo: true)
+        .where('countries', arrayContainsAny: [countryCode, 'ALL', 'EU'])
+        .orderBy('order')
+        .snapshots();
+  }
+
   // Nutzerdaten speichern
   Future<void> saveUserProfile({
     required String firstName,
