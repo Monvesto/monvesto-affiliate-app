@@ -3,16 +3,16 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class BrokerDetailScreen extends StatefulWidget {
+class ProviderDetailScreen extends StatefulWidget {
   final Map<String, dynamic> provider;
 
-  const BrokerDetailScreen({super.key, required this.provider});
+  const ProviderDetailScreen({super.key, required this.provider});
 
   @override
-  State<BrokerDetailScreen> createState() => _BrokerDetailScreenState();
+  State<ProviderDetailScreen> createState() => _ProviderDetailScreenState();
 }
 
-class _BrokerDetailScreenState extends State<BrokerDetailScreen> {
+class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
   bool _isFavorite = false;
 
   @override
@@ -43,23 +43,6 @@ class _BrokerDetailScreenState extends State<BrokerDetailScreen> {
     await prefs.setStringList('favorites', favorites);
   }
 
-  Widget _infoRow(String label, String value, {Color? valueColor}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: GoogleFonts.inter(color: Colors.white70, fontSize: 14)),
-          Text(value,
-              style: GoogleFonts.inter(
-                  color: valueColor ?? Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600)),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final provider = widget.provider;
@@ -67,11 +50,6 @@ class _BrokerDetailScreenState extends State<BrokerDetailScreen> {
     final hasReturn = provider['return'] != null &&
         provider['return'].toString().isNotEmpty &&
         provider['return'].toString() != 'Variabel';
-
-    // Markets als String aufbereiten
-    final markets = provider['markets'] is List
-        ? (provider['markets'] as List<dynamic>).join(', ')
-        : (provider['markets']?.toString() ?? 'k.A.');
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A0E1A),
@@ -116,7 +94,8 @@ class _BrokerDetailScreenState extends State<BrokerDetailScreen> {
                     const SizedBox(height: 12),
                     Text(provider['name'],
                         style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-                    Text('Broker', style: GoogleFonts.inter(fontSize: 14, color: Colors.white70)),
+                    Text(provider['category'],
+                        style: GoogleFonts.inter(fontSize: 14, color: Colors.white70)),
                   ],
                 ),
               ),
@@ -134,7 +113,7 @@ class _BrokerDetailScreenState extends State<BrokerDetailScreen> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      // Zinsen Badge – nur wenn gepflegt
+                      // Rendite Badge – nur wenn gepflegt
                       if (hasReturn)
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -149,7 +128,7 @@ class _BrokerDetailScreenState extends State<BrokerDetailScreen> {
                               Icon(Icons.trending_up, color: color, size: 16),
                               const SizedBox(width: 4),
                               Text(
-                                '${provider['return']} Zinsen',
+                                '${provider['return']} Rendite',
                                 style: GoogleFonts.inter(color: color, fontWeight: FontWeight.bold),
                               ),
                             ],
@@ -204,48 +183,6 @@ class _BrokerDetailScreenState extends State<BrokerDetailScreen> {
                   const SizedBox(height: 8),
                   Text(provider['description'],
                       style: GoogleFonts.inter(fontSize: 14, color: Colors.white70, height: 1.5)),
-                  const SizedBox(height: 24),
-
-                  // ─── Broker Details ───
-                  Text('Broker Details',
-                      style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF131829),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(
-                      children: [
-                        _infoRow('Ordergebühren', provider['orderFee'] ?? 'k.A.'),
-                        const Divider(color: Colors.white12),
-                        _infoRow('Depot Gebühren', provider['depotFee'] ?? 'k.A.'),
-                        const Divider(color: Colors.white12),
-                        _infoRow('Verfügbare Märkte', markets),
-                        const Divider(color: Colors.white12),
-                        _infoRow(
-                          'ETF Sparpläne',
-                          provider['etfSavingsPlan'] == true ? 'Ja ✓' : 'Nein',
-                          valueColor: provider['etfSavingsPlan'] == true
-                              ? const Color(0xFF00D4AA)
-                              : Colors.white54,
-                        ),
-                        const Divider(color: Colors.white12),
-                        _infoRow(
-                          'Krypto handelbar',
-                          provider['cryptoTrading'] == true ? 'Ja ✓' : 'Nein',
-                          valueColor: provider['cryptoTrading'] == true
-                              ? const Color(0xFF00D4AA)
-                              : Colors.white54,
-                        ),
-                        const Divider(color: Colors.white12),
-                        _infoRow('Zinsen auf Guthaben', provider['interestRate'] ?? 'k.A.'),
-                        const Divider(color: Colors.white12),
-                        _infoRow('Regulierung', provider['regulation'] ?? 'k.A.'),
-                      ],
-                    ),
-                  ),
                   const SizedBox(height: 24),
 
                   // ─── Vorteile ───

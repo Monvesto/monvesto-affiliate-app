@@ -178,7 +178,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   CircleAvatar(
                     radius: 45,
-                    backgroundColor: const Color(0xFF00D4AA),
+                    backgroundColor: const Color(0xFF00D4AA).withValues(alpha: 0.8),
                     child: Text(
                       _initials,
                       style: GoogleFonts.inter(

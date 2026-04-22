@@ -77,6 +77,7 @@ class _BankDetailScreenState extends State<BankDetailScreen> {
           // ─── Header ───
           SliverAppBar(
             expandedHeight: 200,
+            pinned: true,
             backgroundColor: const Color(0xFF0A0E1A),
             iconTheme: const IconThemeData(color: Colors.white),
             actions: [
@@ -143,34 +144,32 @@ class _BankDetailScreenState extends State<BankDetailScreen> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      // Zinsen Badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                              color: color.withValues(alpha: 0.3)),
+                      // Tagesgeld Badge – nur wenn gepflegt
+                      if (provider['return'] != null &&
+                          provider['return'].toString().isNotEmpty &&
+                          provider['return'].toString() != 'Variabel')
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: color.withValues(alpha: 0.3)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.percent, color: color, size: 16),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${provider['return']} Tagesgeld',
+                                style: GoogleFonts.inter(color: color, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.percent, color: color, size: 16),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${provider['return']} Zinsen',
-                              style: GoogleFonts.inter(
-                                  color: color,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      ),
                       // Bewertung Badge
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
                           color: const Color(0xFF131829),
                           borderRadius: BorderRadius.circular(20),
@@ -178,14 +177,11 @@ class _BankDetailScreenState extends State<BankDetailScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.star,
-                                color: Color(0xFFFFD93D), size: 16),
+                            const Icon(Icons.star, color: Color(0xFFFFD93D), size: 16),
                             const SizedBox(width: 4),
                             Text(
                               '${provider['rating']}',
-                              style: GoogleFonts.inter(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold),
+                              style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
@@ -193,21 +189,16 @@ class _BankDetailScreenState extends State<BankDetailScreen> {
                       // Referral Badge
                       if (provider['referral'] == true)
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFD93D)
-                                .withValues(alpha: 0.1),
+                            color: const Color(0xFFFFD93D).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                                color: const Color(0xFFFFD93D)
-                                    .withValues(alpha: 0.3)),
+                            border: Border.all(color: const Color(0xFFFFD93D).withValues(alpha: 0.3)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.people_outline,
-                                  color: Color(0xFFFFD93D), size: 16),
+                              const Icon(Icons.people_outline, color: Color(0xFFFFD93D), size: 16),
                               const SizedBox(width: 4),
                               Text(
                                 'Freunde werben möglich ✓',
@@ -298,7 +289,7 @@ class _BankDetailScreenState extends State<BankDetailScreen> {
                           fontWeight: FontWeight.bold,
                           color: Colors.white)),
                   const SizedBox(height: 12),
-                  ...(provider['pros'] as List<String>).map((pro) =>
+                  ...(provider['pros'] as List<dynamic>).map((pro) =>
                       Container(
                         margin: const EdgeInsets.only(bottom: 8),
                         padding: const EdgeInsets.all(12),
@@ -327,7 +318,7 @@ class _BankDetailScreenState extends State<BankDetailScreen> {
                           fontWeight: FontWeight.bold,
                           color: Colors.white)),
                   const SizedBox(height: 12),
-                  ...(provider['cons'] as List<String>).map((con) =>
+                  ...(provider['cons'] as List<dynamic>).map((con) =>
                       Container(
                         margin: const EdgeInsets.only(bottom: 8),
                         padding: const EdgeInsets.all(12),

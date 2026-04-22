@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'compare_screen.dart';
 import 'favorites_screen.dart';
 import 'settings_screen.dart';
-import 'provider_detail_screen.dart';
+import 'detail/provider_detail_screen.dart';
 import '../services/firestore_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/search_bar_widget.dart';
@@ -211,10 +211,10 @@ class _HomeContentState extends State<_HomeContent> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Hallo 👋',
+                    Text('Willkommen!',
                         style: GoogleFonts.inter(
                             fontSize: 14, color: Colors.white54)),
-                    Text('Monvesto Affiliate',
+                    Text('Monvesto',
                         style: GoogleFonts.inter(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -242,7 +242,7 @@ class _HomeContentState extends State<_HomeContent> {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF00D4AA), Color(0xFF0088CC)],
+                  colors: [Color(0xFF00897B), Color(0xFF005F8A)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -369,26 +369,13 @@ class _HomeContentState extends State<_HomeContent> {
                 var filtered = docs.map((doc) {
                   final data = doc.data() as Map<String, dynamic>;
                   return {
-                    'name': data['name'] ?? '',
-                    'category': data['category'] ?? '',
-                    'description': data['description'] ?? '',
-                    'return': data['return'] ?? '',
-                    'rating': double.tryParse(
-                        data['rating'].toString()) ??
-                        0.0,
-                    'url': data['url'] ?? '',
-                    'pros': data['pros'] is List
-                        ? List<String>.from(data['pros'])
-                        : [],
-                    'cons': data['cons'] is List
-                        ? List<String>.from(data['cons'])
-                        : [],
-                    'tags': data['tags'] is List
-                        ? List<String>.from(data['tags'])
-                        : [],
+                    ...data, // ← alle Firestore Felder direkt übernehmen
+                    'rating': double.tryParse(data['rating'].toString()) ?? 0.0,
                     'color': _hexToColor(data['colorHex'] ?? '00D4AA'),
                     'icon': _categoryToIcon(data['category'] ?? ''),
-                    'referral': data['referral'] ?? false,
+                    'pros': data['pros'] is List ? List<dynamic>.from(data['pros']) : [],
+                    'cons': data['cons'] is List ? List<dynamic>.from(data['cons']) : [],
+                    'tags': data['tags'] is List ? List<dynamic>.from(data['tags']) : [],
                   };
                 }).toList();
 
@@ -415,7 +402,7 @@ class _HomeContentState extends State<_HomeContent> {
                         .toString()
                         .toLowerCase()
                         .contains(query)) return true;
-                    final tags = p['tags'] as List<String>;
+                    final tags = p['tags'] as List<dynamic>;
                     if (tags.any((tag) =>
                         tag.toLowerCase().contains(query))) return true;
                     return false;
@@ -467,7 +454,7 @@ class _CategoryChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFF00D4AA)
+              ? const Color(0xFF00D4AA).withValues(alpha: 0.8)
               : const Color(0xFF131829),
           borderRadius: BorderRadius.circular(22),
         ),
@@ -562,19 +549,25 @@ class _ProviderCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(provider['return'],
-                        style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF00D4AA))),
-                    Text('Rendite',
-                        style: GoogleFonts.inter(
-                            fontSize: 10, color: Colors.white38)),
-                  ],
-                ),
+                if (provider['return'] != null && provider['return'].toString().isNotEmpty && provider['return'].toString() != 'Variabel')
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(provider['return'],
+                          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF00D4AA))),
+                      Text(
+                            () {
+                          switch (provider['category']) {
+                            case 'Bankkonten': return 'Tagesgeld';
+                            case 'Krypto': return 'Staking';
+                            case 'Broker': return 'Zinsen';
+                            default: return 'Rendite';
+                          }
+                        }(),
+                        style: GoogleFonts.inter(fontSize: 10, color: Colors.white38),
+                      ),
+                    ],
+                  ),
                 IconButton(
                   onPressed: onFavoriteToggle,
                   icon: Icon(
@@ -592,42 +585,34 @@ class _ProviderCard extends StatelessWidget {
                     fontSize: 13, color: Colors.white70)),
             const SizedBox(height: 12),
 
-            // Pros
+            // Pros + Referral Badge
             Wrap(
               spacing: 8,
               runSpacing: 4,
-              children: (provider['pros'] as List<String>)
-                  .map((pro) => Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF00D4AA)
-                      .withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text('✓ $pro',
-                    style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: const Color(0xFF00D4AA))),
-              ))
-                  .toList(),
+              children: [
+                ...(provider['pros'] as List<dynamic>).map((pro) => Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF00D4AA).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text('✓ $pro',
+                      style: GoogleFonts.inter(
+                          fontSize: 11, color: const Color(0xFF00D4AA))),
+                )),
+                if (provider['referral'] == true)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFD93D).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text('👥 Freunde werben möglich',
+                        style: GoogleFonts.inter(
+                            fontSize: 11, color: const Color(0xFFFFD93D))),
+                  ),
+              ],
             ),
-
-            // ─── Referral Tag ───
-            if (provider['referral'] == true)
-              Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFD93D).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text('👥 Freunde werben möglich',
-                    style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: const Color(0xFFFFD93D))),
-              ),
 
             const SizedBox(height: 12),
 
@@ -651,10 +636,8 @@ class _ProviderCard extends StatelessWidget {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: provider['color'] as Color,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  backgroundColor: (provider['color'] as Color).withValues(alpha: 0.8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 child: Text('Jetzt anmelden →',
                     style: GoogleFonts.inter(
@@ -720,7 +703,7 @@ class _ProfileAvatarState extends State<_ProfileAvatar> {
   @override
   Widget build(BuildContext context) {
     return CircleAvatar(
-      backgroundColor: const Color(0xFF00D4AA),
+      backgroundColor: const Color(0xFF00D4AA).withValues(alpha: 0.8),
       child: Text(
         _initials,
         style: GoogleFonts.inter(
