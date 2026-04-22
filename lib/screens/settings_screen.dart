@@ -5,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import '../services/biometric_service.dart';
 import '../services/firestore_service.dart';
-import '../providers/language_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -22,7 +21,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _notificationsEnabled = true;
   bool _biometricEnabled = false;
   String _selectedTheme = 'Dark';
-  String _selectedLanguage = 'de';
   String _selectedCountry = 'DE';
 
   final List<Map<String, String>> _countries = [
@@ -68,7 +66,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _biometricEnabled = biometricEnabled;
           _newsletterEnabled = prefs.getBool('newsletter') ?? false;
           _selectedCountry = prefs.getString('country') ?? 'DE';
-          _selectedLanguage = prefs.getString('language') ?? 'de';
         });
         return;
       }
@@ -85,7 +82,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _biometricEnabled = biometricEnabled;
       _newsletterEnabled = prefs.getBool('newsletter') ?? false;
       _selectedCountry = prefs.getString('country') ?? 'DE';
-      _selectedLanguage = prefs.getString('language') ?? 'de';
     });
   }
 
@@ -109,10 +105,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await prefs.setString('theme', _selectedTheme);
     await prefs.setBool('newsletter', _newsletterEnabled);
     await prefs.setString('country', _selectedCountry);
-    await prefs.setString('language', _selectedLanguage);
-    if (mounted) {
-      context.read<LanguageProvider>().setLanguage(_selectedLanguage);
-    }
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -267,47 +259,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const Divider(color: Colors.white12),
 
-                  // ─── Sprachauswahl ───
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.language,
-                                color: Color(0xFF00D4AA), size: 20),
-                            const SizedBox(width: 12),
-                            Text('Sprache',
-                                style: GoogleFonts.inter(
-                                    color: Colors.white, fontSize: 14)),
-                          ],
-                        ),
-                        DropdownButton<String>(
-                          value: _selectedLanguage,
-                          dropdownColor: const Color(0xFF1A1F35),
-                          style: GoogleFonts.inter(color: Colors.white),
-                          underline: const SizedBox(),
-                          items: const [
-                            DropdownMenuItem(
-                              value: 'de',
-                              child: Text('🇩🇪 Deutsch'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'en',
-                              child: Text('🇬🇧 English'),
-                            ),
-                          ],
-                          onChanged: (val) {
-                            setState(() => _selectedLanguage = val!);
-                            context
-                                .read<LanguageProvider>()
-                                .setLanguage(val!);
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),

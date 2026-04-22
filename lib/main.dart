@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'providers/theme_provider.dart';
-import 'providers/language_provider.dart';
-import 'generated/l10n.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -18,11 +15,8 @@ void main() async {
   await Firebase.initializeApp();
   await NotificationService().initialize();
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => ThemeProvider()..init()),
-        ChangeNotifierProvider(create: (_) => LanguageProvider()..init(null)),
-      ],
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider()..init(),
       child: const MonvestoAffiliateApp(),
     ),
   );
@@ -34,23 +28,11 @@ class MonvestoAffiliateApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
-    final languageProvider = context.watch<LanguageProvider>();
 
     return MaterialApp(
       title: 'Monvesto Affiliate',
       debugShowCheckedModeBanner: false,
       themeMode: themeProvider.themeMode,
-      locale: languageProvider.locale,
-
-      // ─── Lokalisierung ───
-      localizationsDelegates: const [
-        S.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: S.delegate.supportedLocales,
-
       theme: ThemeData(
         brightness: Brightness.light,
         scaffoldBackgroundColor: Colors.white,

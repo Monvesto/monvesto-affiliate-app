@@ -9,11 +9,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_localizations:
-    sdk: flutter
-
-  # Lokalisierung
-  intl: ^0.19.0
 
   # Auth & Biometrie
   local_auth: ^2.3.0
@@ -47,4 +42,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  generate: true
