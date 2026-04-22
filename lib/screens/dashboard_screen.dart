@@ -10,6 +10,10 @@ import '../services/firestore_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/search_bar_widget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'detail/p2p_detail_screen.dart';
+import 'detail/broker_detail_screen.dart';
+import 'detail/bank_detail_screen.dart';
+import 'detail/crypto_detail_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final bool isGuest;
@@ -494,12 +498,32 @@ class _ProviderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ProviderDetailScreen(provider: provider),
-        ),
-      ),
+      onTap: () {
+        final category = provider['category'];
+        Widget screen;
+
+        switch (category) {
+          case 'P2P Kredite':
+            screen = P2PDetailScreen(provider: provider);
+            break;
+          case 'Broker':
+            screen = BrokerDetailScreen(provider: provider);
+            break;
+          case 'Bankkonten':
+            screen = BankDetailScreen(provider: provider);
+            break;
+          case 'Krypto':
+            screen = CryptoDetailScreen(provider: provider);
+            break;
+          default:
+            screen = ProviderDetailScreen(provider: provider);
+        }
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => screen),
+        );
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(16),
