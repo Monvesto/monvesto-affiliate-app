@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import '../services/biometric_service.dart';
 import '../services/firestore_service.dart';
-import 'package:provider/provider.dart';
-import '../providers/theme_provider.dart';
+import '../providers/language_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -22,9 +22,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _notificationsEnabled = true;
   bool _biometricEnabled = false;
   String _selectedTheme = 'Dark';
-
-  final List<String> _themes = ['Dark', 'Light', 'System'];
-
+  String _selectedLanguage = 'de';
   String _selectedCountry = 'DE';
 
   final List<Map<String, String>> _countries = [
@@ -35,6 +33,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     {'code': 'ALL', 'name': '🌍 Weltweit'},
   ];
 
+  // ─── Initialen ───
   String get _initials {
     final first = _firstNameController.text.isNotEmpty
         ? _firstNameController.text[0].toUpperCase()
@@ -52,15 +51,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _loadSettings();
   }
 
+  // ─── Einstellungen laden ───
   Future<void> _loadSettings() async {
-    // Biometrie Status laden
     final biometricService = BiometricService();
     final biometricEnabled = await biometricService.isEnabled();
-
-    // Lokale Daten laden
     final prefs = await SharedPreferences.getInstance();
 
-    // Firestore Profil laden
     try {
       final profile = await _firestoreService.getUserProfile();
       if (profile != null) {
@@ -72,6 +68,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _biometricEnabled = biometricEnabled;
           _newsletterEnabled = prefs.getBool('newsletter') ?? false;
           _selectedCountry = prefs.getString('country') ?? 'DE';
+          _selectedLanguage = prefs.getString('language') ?? 'de';
         });
         return;
       }
@@ -79,7 +76,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       print('Fehler: $e');
     }
 
-    // Fallback auf lokale Daten
+    // ─── Fallback auf lokale Daten ───
     setState(() {
       _firstNameController.text = prefs.getString('firstName') ?? '';
       _lastNameController.text = prefs.getString('lastName') ?? '';
@@ -88,9 +85,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _biometricEnabled = biometricEnabled;
       _newsletterEnabled = prefs.getBool('newsletter') ?? false;
       _selectedCountry = prefs.getString('country') ?? 'DE';
+      _selectedLanguage = prefs.getString('language') ?? 'de';
     });
   }
 
+  // ─── Einstellungen speichern ───
   Future<void> _saveSettings() async {
     try {
       await _firestoreService.saveUserProfile(
@@ -103,7 +102,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       print('Fehler Firestore: $e');
     }
 
-    // Auch lokal speichern als Backup
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('firstName', _firstNameController.text);
     await prefs.setString('lastName', _lastNameController.text);
@@ -111,7 +109,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await prefs.setString('theme', _selectedTheme);
     await prefs.setBool('newsletter', _newsletterEnabled);
     await prefs.setString('country', _selectedCountry);
-
+    await prefs.setString('language', _selectedLanguage);
+    if (mounted) {
+      context.read<LanguageProvider>().setLanguage(_selectedLanguage);
+    }
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -122,6 +123,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  // ─── Logout ───
   Future<void> _logout() async {
     showDialog(
       context: context,
@@ -177,7 +179,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Avatar
+            // ─── Avatar ───
             Center(
               child: Column(
                 children: [
@@ -194,9 +196,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    '${_firstNameController.text} ${_lastNameController.text}'.trim().isEmpty
+                    '${_firstNameController.text} ${_lastNameController.text}'
+                        .trim()
+                        .isEmpty
                         ? 'Kein Name'
-                        : '${_firstNameController.text} ${_lastNameController.text}'.trim(),
+                        : '${_firstNameController.text} ${_lastNameController.text}'
+                        .trim(),
                     style: GoogleFonts.inter(
                         fontSize: 18,
                         color: Colors.white,
@@ -213,7 +218,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 32),
 
-            // Profil Section
+            // ─── Profil Section ───
             _SectionTitle(title: 'Profil'),
             const SizedBox(height: 12),
             _SettingsCard(
@@ -246,26 +251,69 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ? 'Verifiziert ✓'
                         : 'Nicht verifiziert',
                   ),
-
                   const Divider(color: Colors.white12),
                   _InfoRow(
                     icon: Icons.location_on_outlined,
                     label: 'Land',
-                    value: _selectedCountry == 'DE' ? '🇩🇪 Deutschland' :
-                    _selectedCountry == 'AT' ? '🇦🇹 Österreich' :
-                    _selectedCountry == 'CH' ? '🇨🇭 Schweiz' :
-                    _selectedCountry == 'EU' ? '🇪🇺 Europa' :
-                    '🌍 Weltweit',
+                    value: _selectedCountry == 'DE'
+                        ? '🇩🇪 Deutschland'
+                        : _selectedCountry == 'AT'
+                        ? '🇦🇹 Österreich'
+                        : _selectedCountry == 'CH'
+                        ? '🇨🇭 Schweiz'
+                        : _selectedCountry == 'EU'
+                        ? '🇪🇺 Europa'
+                        : '🌍 Weltweit',
                   ),
+                  const Divider(color: Colors.white12),
 
+                  // ─── Sprachauswahl ───
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.language,
+                                color: Color(0xFF00D4AA), size: 20),
+                            const SizedBox(width: 12),
+                            Text('Sprache',
+                                style: GoogleFonts.inter(
+                                    color: Colors.white, fontSize: 14)),
+                          ],
+                        ),
+                        DropdownButton<String>(
+                          value: _selectedLanguage,
+                          dropdownColor: const Color(0xFF1A1F35),
+                          style: GoogleFonts.inter(color: Colors.white),
+                          underline: const SizedBox(),
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'de',
+                              child: Text('🇩🇪 Deutsch'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'en',
+                              child: Text('🇬🇧 English'),
+                            ),
+                          ],
+                          onChanged: (val) {
+                            setState(() => _selectedLanguage = val!);
+                            context
+                                .read<LanguageProvider>()
+                                .setLanguage(val!);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 24),
 
-            const SizedBox(height: 24),
-
-            // Benachrichtigungen & Sicherheit
+            // ─── Benachrichtigungen & Sicherheit ───
             _SectionTitle(title: 'Benachrichtigungen & Sicherheit'),
             const SizedBox(height: 12),
             _SettingsCard(
@@ -285,8 +333,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     value: _biometricEnabled,
                     onChanged: (val) async {
                       final biometricService = BiometricService();
-                      final available =
-                      await biometricService.isAvailable();
+                      final available = await biometricService.isAvailable();
                       if (available) {
                         await biometricService.setEnabled(val);
                         setState(() => _biometricEnabled = val);
@@ -307,14 +354,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     icon: Icons.email_outlined,
                     label: 'Newsletter abonnieren',
                     value: _newsletterEnabled,
-                    onChanged: (val) => setState(() => _newsletterEnabled = val),
+                    onChanged: (val) =>
+                        setState(() => _newsletterEnabled = val),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 24),
 
-            // App Info
+            // ─── App Info ───
             _SectionTitle(title: 'App Info'),
             const SizedBox(height: 12),
             _SettingsCard(
@@ -342,7 +390,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Logout Button
+            // ─── Logout Button ───
             SizedBox(
               width: double.infinity,
               height: 56,
@@ -369,6 +417,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  // ─── TextField Builder ───
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -400,6 +449,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
+// ─── Section Title Widget ───
 class _SectionTitle extends StatelessWidget {
   final String title;
   const _SectionTitle({required this.title});
@@ -415,6 +465,7 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
+// ─── Settings Card Widget ───
 class _SettingsCard extends StatelessWidget {
   final Widget child;
   const _SettingsCard({required this.child});
@@ -432,6 +483,7 @@ class _SettingsCard extends StatelessWidget {
   }
 }
 
+// ─── Info Row Widget ───
 class _InfoRow extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -467,6 +519,7 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
+// ─── Switch Row Widget ───
 class _SwitchRow extends StatelessWidget {
   final IconData icon;
   final String label;
