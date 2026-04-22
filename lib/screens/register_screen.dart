@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/firestore_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -350,8 +351,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   color: const Color(0xFF00D4AA),
                                   decoration: TextDecoration.underline),
                               recognizer: TapGestureRecognizer()
-                                ..onTap = () {
-                                  // Datenschutz öffnen
+                                ..onTap = () async {
+                                  final uri = Uri.parse('https://monvesto.de/app-datenschutz');
+                                  if (await canLaunchUrl(uri)) {
+                                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                  }
                                 },
                             ),
                             const TextSpan(text: ' und die '),
@@ -361,8 +365,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   color: const Color(0xFF00D4AA),
                                   decoration: TextDecoration.underline),
                               recognizer: TapGestureRecognizer()
-                                ..onTap = () {
-                                  // Nutzungsbedingungen öffnen
+                                ..onTap = () async {
+                                  final uri = Uri.parse('https://monvesto.de/app-nutzungsbedingungen');
+                                  if (await canLaunchUrl(uri)) {
+                                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                  }
                                 },
                             ),
                             const TextSpan(text: ' *'),

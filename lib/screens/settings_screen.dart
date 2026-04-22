@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import '../services/biometric_service.dart';
 import '../services/firestore_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -325,16 +326,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     value: '1.0.0',
                   ),
                   const Divider(color: Colors.white12),
-                  _InfoRow(
-                    icon: Icons.security_outlined,
-                    label: 'Datenschutz',
-                    value: 'Anzeigen →',
+                  GestureDetector(
+                    onTap: () async {
+                      final uri = Uri.parse('https://monvesto.de/app-datenschutz');
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    child: _InfoRow(
+                      icon: Icons.security_outlined,
+                      label: 'Datenschutz',
+                      value: 'Anzeigen →',
+                    ),
                   ),
                   const Divider(color: Colors.white12),
-                  _InfoRow(
-                    icon: Icons.description_outlined,
-                    label: 'Nutzungsbedingungen',
-                    value: 'Anzeigen →',
+                  GestureDetector(
+                    onTap: () async {
+                      final uri = Uri.parse('https://monvesto.de/app-nutzungsbedingungen');
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    child: _InfoRow(
+                      icon: Icons.description_outlined,
+                      label: 'Nutzungsbedingungen',
+                      value: 'Anzeigen →',
+                    ),
                   ),
                 ],
               ),
