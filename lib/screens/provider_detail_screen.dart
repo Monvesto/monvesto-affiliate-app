@@ -110,7 +110,7 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
             ),
           ),
 
-          // Content
+          // ─── Rendite & Bewertung Badges ───
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -166,6 +166,37 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
                       ),
                     ],
                   ),
+
+                  // ─── Referral Badge ───
+                  if (provider['referral'] == true) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFD93D).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: const Color(0xFFFFD93D).withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.people_outline,
+                              color: Color(0xFFFFD93D), size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Freunde werben möglich ✓',
+                            style: GoogleFonts.inter(
+                                color: const Color(0xFFFFD93D),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
                   const SizedBox(height: 24),
 
                   // Beschreibung

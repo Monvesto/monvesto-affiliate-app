@@ -384,6 +384,7 @@ class _HomeContentState extends State<_HomeContent> {
                         : [],
                     'color': _hexToColor(data['colorHex'] ?? '00D4AA'),
                     'icon': _categoryToIcon(data['category'] ?? ''),
+                    'referral': data['referral'] ?? false,
                   };
                 }).toList();
 
@@ -587,6 +588,23 @@ class _ProviderCard extends StatelessWidget {
               ))
                   .toList(),
             ),
+
+            // ─── Referral Tag ───
+            if (provider['referral'] == true)
+              Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFD93D).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text('👥 Freunde werben möglich',
+                    style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: const Color(0xFFFFD93D))),
+              ),
+
             const SizedBox(height: 12),
 
             // Button
