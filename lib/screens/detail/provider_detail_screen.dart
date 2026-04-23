@@ -241,7 +241,7 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF00D4AA).withValues(alpha: 0.8),
+                        backgroundColor: color.withValues(alpha: 0.8),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       child: Text(

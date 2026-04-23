@@ -129,14 +129,14 @@ class _HomeContentState extends State<_HomeContent> {
       'color': const Color(0xFF0088CC),
     },
     {
-      'name': 'Bankkonten',
-      'icon': Icons.account_balance,
-      'color': const Color(0xFFFF6B6B),
-    },
-    {
       'name': 'Krypto',
       'icon': Icons.currency_bitcoin,
       'color': const Color(0xFFFFD93D),
+    },
+    {
+      'name': 'Bankkonten',
+      'icon': Icons.account_balance,
+      'color': const Color(0xFFFF6B6B),
     },
   ];
 
@@ -324,25 +324,21 @@ class _HomeContentState extends State<_HomeContent> {
                     fontWeight: FontWeight.bold,
                     color: Colors.white)),
             const SizedBox(height: 12),
-            SizedBox(
-              height: 44,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  _CategoryChip(
-                    label: 'Alle',
-                    isSelected: _selectedCategory == 'Alle',
-                    onTap: () =>
-                        setState(() => _selectedCategory = 'Alle'),
-                  ),
-                  ..._categories.map((cat) => _CategoryChip(
-                    label: cat['name'],
-                    isSelected: _selectedCategory == cat['name'],
-                    onTap: () => setState(
-                            () => _selectedCategory = cat['name']),
-                  )),
-                ],
-              ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _CategoryChip(
+                  label: 'Alle',
+                  isSelected: _selectedCategory == 'Alle',
+                  onTap: () => setState(() => _selectedCategory = 'Alle'),
+                ),
+                ..._categories.map((cat) => _CategoryChip(
+                  label: cat['name'],
+                  isSelected: _selectedCategory == cat['name'],
+                  onTap: () => setState(() => _selectedCategory = cat['name']),
+                )),
+              ],
             ),
             const SizedBox(height: 24),
 
@@ -450,22 +446,18 @@ class _CategoryChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        margin: const EdgeInsets.only(right: 0),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: isSelected
               ? const Color(0xFF00D4AA).withValues(alpha: 0.8)
               : const Color(0xFF131829),
           borderRadius: BorderRadius.circular(22),
         ),
-        child: Center(
-          child: Text(label,
-              style: GoogleFonts.inter(
-                  color: isSelected ? Colors.white : Colors.white54,
-                  fontWeight: isSelected
-                      ? FontWeight.bold
-                      : FontWeight.normal)),
-        ),
+        child: Text(label,
+            style: GoogleFonts.inter(
+                color: isSelected ? Colors.white : Colors.white54,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
       ),
     );
   }
@@ -496,11 +488,11 @@ class _ProviderCard extends StatelessWidget {
           case 'Broker':
             screen = BrokerDetailScreen(provider: provider);
             break;
-          case 'Bankkonten':
-            screen = BankDetailScreen(provider: provider);
-            break;
           case 'Krypto':
             screen = CryptoDetailScreen(provider: provider);
+            break;
+          case 'Bankkonten':
+            screen = BankDetailScreen(provider: provider);
             break;
           default:
             screen = ProviderDetailScreen(provider: provider);

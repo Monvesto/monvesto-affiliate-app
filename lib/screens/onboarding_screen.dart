@@ -56,25 +56,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Skip Button
-            Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: TextButton(
-                  onPressed: () async {
-                    await _completeOnboarding();
-                    if (mounted) {
-                      Navigator.pushReplacementNamed(context, '/login');
-                    }
-                  },
-                  child: Text('Überspringen',
-                      style: GoogleFonts.inter(
-                          color: Colors.white38, fontSize: 14)),
-                ),
-              ),
-            ),
-
             // Slides
             Expanded(
               child: PageView.builder(
@@ -132,6 +113,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
                         // Letzter Slide - Buttons
                         if (isLast) ...[
+                          // Registrieren Button
                           SizedBox(
                             width: double.infinity,
                             height: 56,
@@ -140,15 +122,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 await _completeOnboarding();
                                 if (mounted) {
                                   Navigator.pushReplacementNamed(
-                                      context, '/login');
+                                      context, '/register');
                                 }
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor:
-                                const Color(0xFF00D4AA),
+                                const Color(0xFF00D4AA).withValues(alpha: 0.8),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                  BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
                               child: Text('Registrieren',
@@ -159,6 +140,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             ),
                           ),
                           const SizedBox(height: 12),
+
+                          // Ohne Anmeldung Button
                           SizedBox(
                             width: double.infinity,
                             height: 56,
@@ -171,19 +154,38 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 }
                               },
                               style: OutlinedButton.styleFrom(
-                                side: const BorderSide(
-                                    color: Color(0xFF00D4AA)),
+                                side: BorderSide(
+                                    color: const Color(0xFF00D4AA)
+                                        .withValues(alpha: 0.5)),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                  BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              child: Text('Ohne Anmeldung →',
+                              child: Text('Ohne Anmeldung fortfahren',
                                   style: GoogleFonts.inter(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
-                                      color:
-                                      const Color(0xFF00D4AA))),
+                                      color: const Color(0xFF00D4AA))),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Ich habe schon einen Account
+                          GestureDetector(
+                            onTap: () async {
+                              await _completeOnboarding();
+                              if (mounted) {
+                                Navigator.pushReplacementNamed(
+                                    context, '/login');
+                              }
+                            },
+                            child: Text(
+                              'Ich habe schon einen Account',
+                              style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  color: Colors.white38,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: Colors.white38),
                             ),
                           ),
                         ],
@@ -230,8 +232,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       child: Container(
                         width: 56,
                         height: 56,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF00D4AA),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF00D4AA).withValues(alpha: 0.8),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.arrow_forward,
